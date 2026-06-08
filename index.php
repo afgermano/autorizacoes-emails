@@ -159,7 +159,7 @@ class AutorizacaoEmail {
 
             echo "Data: <span style='color:#888'>{$registro['data']}</span><br>";
             if (($registro['status'] ?? 'autorizado') === 'autorizado') {
-                echo " 🟩 AUTORIZADO ";
+                echo "<span style='color:#008000;font-weight:bold;'> 🟩 AUTORIZADO </span>";
             } else {
                 echo "<span style='color:#c0392b;font-weight:bold;'>🟥 NÃO AUTORIZADO </span>";
             }
