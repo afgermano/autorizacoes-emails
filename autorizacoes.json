@@ -1,0 +1,27 @@
+[
+    {
+        "message_id": "<CAK8GbBd4dGMdYxHrXFSX+2FTZ7wH7kcGrZ6vi7g+-Oh9q9mezQ@mail.gmail.com>",
+        "remetente": "germanoana943@gmail.com",
+        "email_autorizar": "carlos@gmail.com",
+        "data": "08\/06\/2026 11:25"
+    },
+    {
+        "message_id": "<CAK8GbBeGo1x6+dZJrQLW5x7tXMj7G=dQEU=fX9mvpO7fMMV4BQ@mail.gmail.com>",
+        "remetente": "germanoana943@gmail.com",
+        "email_autorizar": "ana.germano@gmail.com",
+        "data": "08\/06\/2026 11:25"
+    },
+    {
+        "message_id": "<CA+NmzWvf9bpTf2Evb8JrL1gur6M1Qwa4rPi2hOQ_P9b700ajfA@mail.gmail.com>",
+        "remetente": "skzirius@gmail.com",
+        "email_autorizar": "teste@gmail.com",
+        "data": "08\/06\/2026 11:40"
+    },
+    {
+        "message_id": "<CAHXM=uMxOm-JvXV9cKtKtECLWERSF8NtD8c0QAehBWxsxocXAA@mail.gmail.com>",
+        "remetente": "ana.zgermano2005@gmail.com",
+        "email_autorizar": "",
+        "data": "08\/06\/2026 12:45",
+        "status": "nao_autorizado"
+    }
+]
