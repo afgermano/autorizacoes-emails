@@ -1,27 +1,51 @@
 [
     {
-        "message_id": "<CAK8GbBd4dGMdYxHrXFSX+2FTZ7wH7kcGrZ6vi7g+-Oh9q9mezQ@mail.gmail.com>",
-        "remetente": "germanoana943@gmail.com",
-        "email_autorizar": "carlos@gmail.com",
-        "data": "08\/06\/2026 11:25"
+        "message_id": "<9d3edc9d8f754687aef8154d2edd8e8a@S1EXCH01WV.VIARONDON.LOCAL>",
+        "remetente": "ana.germano@viarondon.com.br",
+        "email_autorizar": "teste@viarondon.com.br",
+        "data": "09\/06\/2026 08:42",
+        "status": "autorizado"
     },
     {
-        "message_id": "<CAK8GbBeGo1x6+dZJrQLW5x7tXMj7G=dQEU=fX9mvpO7fMMV4BQ@mail.gmail.com>",
-        "remetente": "germanoana943@gmail.com",
-        "email_autorizar": "ana.germano@gmail.com",
-        "data": "08\/06\/2026 11:25"
+        "message_id": "<253f50e815a2413cb17f4ad8eae17a66@S1EXCH01WV.VIARONDON.LOCAL>",
+        "remetente": "ana.germano@viarondon.com.br",
+        "email_autorizar": "maisteste@viarondon.com.br",
+        "data": "09\/06\/2026 08:42",
+        "status": "autorizado"
     },
     {
-        "message_id": "<CA+NmzWvf9bpTf2Evb8JrL1gur6M1Qwa4rPi2hOQ_P9b700ajfA@mail.gmail.com>",
-        "remetente": "skzirius@gmail.com",
-        "email_autorizar": "teste@gmail.com",
-        "data": "08\/06\/2026 11:40"
+        "message_id": "<c6f589961d9d41b5b90d04fe6a5f4e43@S1EXCH01WV.VIARONDON.LOCAL>",
+        "remetente": "ana.germano@viarondon.com.br",
+        "email_autorizar": "teste235@viarondon.com.br",
+        "data": "09\/06\/2026 08:42",
+        "status": "autorizado"
     },
     {
         "message_id": "<CAHXM=uMxOm-JvXV9cKtKtECLWERSF8NtD8c0QAehBWxsxocXAA@mail.gmail.com>",
         "remetente": "ana.zgermano2005@gmail.com",
         "email_autorizar": "",
-        "data": "08\/06\/2026 12:45",
+        "data": "09\/06\/2026 08:43",
         "status": "nao_autorizado"
+    },
+    {
+        "message_id": "<CA+NmzWvf9bpTf2Evb8JrL1gur6M1Qwa4rPi2hOQ_P9b700ajfA@mail.gmail.com>",
+        "remetente": "skzirius@gmail.com",
+        "email_autorizar": "teste@gmail.com",
+        "data": "09\/06\/2026 08:43",
+        "status": "autorizado"
+    },
+    {
+        "message_id": "<CAK8GbBd4dGMdYxHrXFSX+2FTZ7wH7kcGrZ6vi7g+-Oh9q9mezQ@mail.gmail.com>",
+        "remetente": "germanoana943@gmail.com",
+        "email_autorizar": "carlos@gmail.com",
+        "data": "09\/06\/2026 08:43",
+        "status": "autorizado"
+    },
+    {
+        "message_id": "<CAK8GbBeGo1x6+dZJrQLW5x7tXMj7G=dQEU=fX9mvpO7fMMV4BQ@mail.gmail.com>",
+        "remetente": "germanoana943@gmail.com",
+        "email_autorizar": "ana.germano@gmail.com",
+        "data": "09\/06\/2026 08:43",
+        "status": "autorizado"
     }
 ]

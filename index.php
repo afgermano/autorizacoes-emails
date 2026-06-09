@@ -5,8 +5,7 @@ date_default_timezone_set('America/Sao_Paulo');
 class AutorizacaoEmail {
 
     private $conexao;
-    private $arquivoHistorico = __DIR__ . '/autorizacoes.json'; // ← adiciona esta linha
-
+    private $arquivoHistorico = __DIR__ . '/autorizacoes.json';
 
     private $config = [
         'host'    => '{imap.gmail.com:993/imap/ssl}INBOX',
@@ -44,73 +43,103 @@ class AutorizacaoEmail {
     public function pegarCorpoEmail($emailId) {
         $estrutura = imap_fetchstructure($this->conexao, $emailId);
         $corpo = '';
+        $corpoHtml = '';
 
         if (!isset($estrutura->parts)) {
-            $corpo = imap_body($this->conexao, $emailId);
+            $corpo = imap_fetchbody($this->conexao, $emailId, '1');
+            if ($estrutura->encoding == 3) $corpo = base64_decode($corpo);
+            elseif ($estrutura->encoding == 4) $corpo = quoted_printable_decode($corpo);
         } else {
-            foreach ($estrutura->parts as $i => $parte) {
-                $parteIndex = $i + 1;
-                $dados = imap_fetchbody($this->conexao, $emailId, $parteIndex);
-
-                if ($parte->encoding == 3) {
-                    $dados = base64_decode($dados);
-                } elseif ($parte->encoding == 4) {
-                    $dados = quoted_printable_decode($dados);
-                }
-
-                if (isset($parte->subtype) && $parte->subtype == 'PLAIN') {
-                    $corpo = $dados;
-                    break;
-                }
-
-                if (isset($parte->subtype) && $parte->subtype == 'HTML') {
-                    $corpo = strip_tags($dados);
-                }
-            }
+            $this->extrairPartes($estrutura->parts, $emailId, $corpo, $corpoHtml);
         }
 
+        if (empty(trim($corpo)) && !empty($corpoHtml)) {
+            $corpo = strip_tags($corpoHtml);
+        }
+
+        if (mb_detect_encoding($corpo, 'UTF-8', true) === false) {
+            $corpo = mb_convert_encoding($corpo, 'UTF-8', 'ISO-8859-1');
+        }
+
+        $corpo = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $corpo);
+
         return trim($corpo);
+    }
+
+    private function extrairPartes($partes, $emailId, &$corpo, &$corpoHtml, $prefixo = '') {
+        foreach ($partes as $i => $parte) {
+            $index = $prefixo ? $prefixo . '.' . ($i + 1) : (string)($i + 1);
+
+            if (isset($parte->parts)) {
+                $this->extrairPartes($parte->parts, $emailId, $corpo, $corpoHtml, $index);
+                continue;
+            }
+
+            $dados = imap_fetchbody($this->conexao, $emailId, $index);
+
+            if ($parte->encoding == 3) $dados = base64_decode($dados);
+            elseif ($parte->encoding == 4) $dados = quoted_printable_decode($dados);
+
+            $subtype = strtoupper($parte->subtype ?? '');
+
+            if ($subtype === 'PLAIN' && empty($corpo)) {
+                $corpo = $dados;
+            } elseif ($subtype === 'HTML' && empty($corpoHtml)) {
+                $corpoHtml = $dados;
+            }
+        }
     }
 
     public function listarAutorizacoes() {
 
         $historico = $this->carregarHistorico();
 
-        $emails = imap_search($this->conexao, 'ALL SUBJECT "AUTORIZAÇÃO DE ACESSO"');
+        // Busca TODOS e filtra por assunto no PHP (evita problema com acentos no imap_search)
+        $emails = imap_search($this->conexao, 'ALL');
 
-        // Processa novos e-mails e adiciona ao histórico
         if ($emails) {
             rsort($emails);
 
             foreach ($emails as $emailId) {
 
                 $header = imap_headerinfo($this->conexao, $emailId);
-                $corpo  = $this->pegarCorpoEmail($emailId);
 
-                $remetenteEmail = $header->from[0]->mailbox . '@' . $header->from[0]->host;
+                // Decodifica assunto corretamente
+                $assunto = imap_utf8($header->subject ?? '');
 
-                $emailAutorizar = '';
-                if (preg_match('/Email:\s*([\w\.\-\+]+@[\w\.\-]+\.[a-z]{2,})/i', $corpo, $match)) {
-                    $emailAutorizar = $match[1];
+                // Filtra apenas e-mails com o assunto correto
+                $assuntoNormalizado = mb_strtolower(imap_utf8($header->subject ?? ''));
+                $assuntoValido = str_contains($assuntoNormalizado, 'autoriza') && str_contains($assuntoNormalizado, 'acesso');
+
+                if (!$assuntoValido) {
+                    continue; // ignora e-mails com outro assunto
                 }
 
-                $emailValido = filter_var($emailAutorizar, FILTER_VALIDATE_EMAIL);
+                $corpo = $this->pegarCorpoEmail($emailId);
 
+                $corpo = preg_replace('/=\r?\n/', '', $corpo);
+                $corpo = preg_replace('/\r?\n/', ' ', $corpo);
+                $corpo = preg_replace('/\s+/', ' ', $corpo);
+
+                $emailAutorizar = '';
+
+                if (preg_match('/E-?MA?IL:\s*([\w\.\-\+]+@[\w\.\-]+\.[a-zA-Z]{2,})/i', $corpo, $match)) {
+                    $emailAutorizar = trim($match[1]);
+                }
+
+                $remetenteEmail = isset($header->from[0])
+                    ? $header->from[0]->mailbox . '@' . $header->from[0]->host
+                    : 'desconhecido';
+
+                $emailValido = filter_var($emailAutorizar, FILTER_VALIDATE_EMAIL) !== false;
                 $corpoValido = !empty(trim($corpo));
+                $autorizado  = $corpoValido && $emailValido;
 
-                $assuntoValido = stripos($header->subject, 'AUTORIZAÇÃO DE ACESSO') !== false;
-
-                $autorizado = (
-                    $assuntoValido &&
-                    $corpoValido &&
-                    $emailValido
-                );  
-
-                // Evita duplicatas no histórico pelo message-id
                 $messageId = $header->message_id ?? uniqid();
-                $jaExiste = array_filter($historico, fn($r) => 
-                    $r['message_id'] === $messageId || 
-                    ($r['email_autorizar'] === $emailAutorizar && $emailAutorizar !== '')
+
+                $jaExiste = array_filter($historico, fn($r) =>
+                    $r['message_id'] === $messageId ||
+                    ($emailAutorizar !== '' && ($r['email_autorizar'] ?? '') === $emailAutorizar)
                 );
 
                 if (empty($jaExiste)) {
@@ -122,7 +151,7 @@ class AutorizacaoEmail {
                         'status'          => $autorizado ? 'autorizado' : 'nao_autorizado',
                     ];
                 }
-                // Marca como lido
+
                 imap_setflag_full($this->conexao, (string)$emailId, "\\Seen");
             }
 
@@ -151,18 +180,20 @@ class AutorizacaoEmail {
 
             echo "Remetente: <strong>{$registro['remetente']}</strong><br>";
 
-            if ($registro['email_autorizar']) {
+            if (!empty($registro['email_autorizar'])) {
                 echo "Email: <strong>{$registro['email_autorizar']}</strong><br>";
             } else {
                 echo "Email: <em style='color:#999'>não encontrado</em><br>";
             }
 
             echo "Data: <span style='color:#888'>{$registro['data']}</span><br>";
-            if (($registro['status'] ?? 'autorizado') === 'autorizado') {
-                echo "<span style='color:#008000;font-weight:bold;'> 🟩 AUTORIZADO </span>";
+
+            if (($registro['status'] ?? 'nao_autorizado') === 'autorizado') {
+                echo "<span style='color:#008000;font-weight:bold;'>🟩 AUTORIZADO</span>";
             } else {
-                echo "<span style='color:#c0392b;font-weight:bold;'>🟥 NÃO AUTORIZADO </span>";
+                echo "<span style='color:#c0392b;font-weight:bold;'>🟥 NÃO AUTORIZADO</span>";
             }
+
             echo '</div>';
         }
     }
